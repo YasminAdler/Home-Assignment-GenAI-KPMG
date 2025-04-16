@@ -1,40 +1,29 @@
-import os
-from pydantic import BaseSettings
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+from typing import Literal
+from pathlib import Path
 
-# Load environment variables from .env file
-load_dotenv()
 
 class Settings(BaseSettings):
-    # API Settings
+    DEBUG: bool = False
     API_VERSION: str = "v1"
-    DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
-    
-    # Azure OpenAI Configuration
-    AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "")
-    AZURE_OPENAI_API_KEY: str = os.getenv("AZURE_OPENAI_API_KEY", "")
-    AZURE_OPENAI_DEPLOYMENT_INFO: str = os.getenv("AZURE_OPENAI_DEPLOYMENT_INFO", "")
-    AZURE_OPENAI_DEPLOYMENT_QA: str = os.getenv("AZURE_OPENAI_DEPLOYMENT_QA", "")
-    AZURE_OPENAI_API_VERSION: str = os.getenv("AZURE_OPENAI_API_VERSION", "2023-05-15")
-    
-    # Knowledge Base Settings
-    KNOWLEDGE_BASE_DIR: str = os.getenv("KNOWLEDGE_BASE_DIR", "../data/phase2_data")
-    
-    # Logging
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_DIR: str = os.getenv("LOG_DIR", "../logs")
-    
-    # Supported Languages
-    SUPPORTED_LANGUAGES: list = ["en", "he"]
-    DEFAULT_LANGUAGE: str = "en"
-    
-    # HMO Options
-    HMO_OPTIONS: list = ["מכבי", "מאוחדת", "כללית"]
-    TIER_OPTIONS: list = ["זהב", "כסף", "ארד"]
+
+    AZURE_OPENAI_ENDPOINT: str
+    AZURE_OPENAI_API_KEY: str  
+    AZURE_OPENAI_DEPLOYMENT_INFO: str
+    AZURE_OPENAI_DEPLOYMENT_QA: str
+    AZURE_OPENAI_API_VERSION: str = "2023-05-15"
+
+    KNOWLEDGE_BASE_DIR: Path = Path("./data/phase2_data")
+
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    LOG_DIR: Path = Path("./logs")
+
+    API_URL: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        case_sensitive = True
 
-# Create settings instance
+
 settings = Settings()

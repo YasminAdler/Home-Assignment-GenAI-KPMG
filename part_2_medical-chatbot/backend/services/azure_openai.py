@@ -23,7 +23,6 @@ class AzureOpenAIService:
         logger.info("Azure OpenAI service initialized successfully")
     
     def _validate_configuration(self):
-        """Validate that the required configuration is available."""
         if not settings.AZURE_OPENAI_API_KEY:
             raise ValueError("Azure OpenAI API key is not configured")
         if not settings.AZURE_OPENAI_ENDPOINT:
@@ -34,16 +33,6 @@ class AzureOpenAIService:
             raise ValueError("Azure OpenAI Q&A deployment is not configured")
     
     async def get_user_information(self, messages: List[Dict[str, str]], language: str) -> str:
-        """
-        Get user information using the LLM.
-        
-        Args:
-            messages: List of message objects with role and content
-            language: Language code (en or he)
-            
-        Returns:
-            The LLM response
-        """
         try:
             system_message = self._get_info_collection_system_prompt(language)
             all_messages = [{"role": "system", "content": system_message}] + messages
@@ -58,7 +47,6 @@ class AzureOpenAIService:
                 presence_penalty=0
             )
             
-            # Extract the content from the response
             content = response.choices[0].message.content
             logger.info("Successfully obtained user information response")
             return content
@@ -67,25 +55,7 @@ class AzureOpenAIService:
             logger.error(f"Error in get_user_information: {str(e)}")
             raise
     
-    async def get_qa_response(
-        self, 
-        messages: List[Dict[str, str]], 
-        user_info: Dict[str, Any],
-        knowledge_base: str,
-        language: str
-    ) -> str:
-        """
-        Get question answering response using the LLM.
-        
-        Args:
-            messages: List of message objects with role and content
-            user_info: User information dictionary
-            knowledge_base: Knowledge base content
-            language: Language code (en or he)
-            
-        Returns:
-            The LLM response
-        """
+    async def get_qa_response(self, messages: List[Dict[str, str]], user_info: Dict[str, Any],knowledge_base: str,language: str) -> str:
         try:
             system_message = self._get_qa_system_prompt(user_info, knowledge_base, language)
             all_messages = [{"role": "system", "content": system_message}] + messages
@@ -100,7 +70,6 @@ class AzureOpenAIService:
                 presence_penalty=0
             )
             
-            # Extract the content from the response
             content = response.choices[0].message.content
             logger.info("Successfully obtained Q&A response")
             return content
@@ -110,15 +79,6 @@ class AzureOpenAIService:
             raise
     
     def _get_info_collection_system_prompt(self, language: str) -> str:
-        """
-        Get the system prompt for information collection.
-        
-        Args:
-            language: Language code (en or he)
-            
-        Returns:
-            The system prompt
-        """
         if language == "he":
             return """
             אתה עוזר אדיב שמסייע לאסוף מידע ממשתמשים עבור שירותי בריאות בישראל.
@@ -153,18 +113,7 @@ class AzureOpenAIService:
             """
     
     def _get_qa_system_prompt(self, user_info: Dict[str, Any], knowledge_base: str, language: str) -> str:
-        """
-        Get the system prompt for Q&A.
         
-        Args:
-            user_info: User information dictionary
-            knowledge_base: Knowledge base content
-            language: Language code (en or he)
-            
-        Returns:
-            The system prompt
-        """
-        # Extract user info for the prompt
         name = f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}"
         hmo = user_info.get('hmo', '')
         tier = user_info.get('insurance_tier', '')
@@ -207,3 +156,26 @@ class AzureOpenAIService:
             3. If you don't know the answer or the information is not available in the knowledge base, clearly state that.
             4. Answer in Hebrew if the user asks in Hebrew, or in English if the user asks in English.
             """
+    
+    
+    
+    async def get_confirmation_check(self, messages: List[Dict[str, str]], language: str) -> str:
+        try:
+            response = self.client.chat.completions.create(
+                model=self.info_deployment,  # Reuse the info collection model
+                messages=messages,
+                temperature=0.1,  # Low temperature for more deterministic response
+                max_tokens=5,     # We only need a short response
+                top_p=0.95,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
+            
+            # Extract the content from the response
+            content = response.choices[0].message.content
+            logger.info("Successfully obtained confirmation check response")
+            return content
+            
+        except Exception as e:
+            logger.error(f"Error in get_confirmation_check: {str(e)}")
+            raise

@@ -46,39 +46,11 @@ cd medical-chatbot
 ```bash
 python -m venv venv
 venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r part_2_medical-chatbot/logs/requirements.txt
 ```
 
-### Step 3: Configure Environment Variables
 
-Copy the example environment file and update it with your Azure OpenAI credentials:
-
-```bash
-cp .env.example .env
-```
-
-Edit the `.env` file with your specific configuration:
-
-```
-# Azure OpenAI Configuration
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key
-AZURE_OPENAI_DEPLOYMENT_INFO=deployment-name-for-info-collection
-AZURE_OPENAI_DEPLOYMENT_QA=deployment-name-for-qa
-AZURE_OPENAI_API_VERSION=2023-05-15
-
-# Knowledge Base Settings
-KNOWLEDGE_BASE_DIR=./data/phase2_data
-
-# Logging
-LOG_LEVEL=INFO
-LOG_DIR=./logs
-
-# API Settings
-DEBUG=False
-```gpt-4o-2
-
-### Step 4: Add Knowledge Base Files
+### Step 3: Add Knowledge Base Files
 
 Place your HTML knowledge base files in the `data/phase2_data/` directory:
 
@@ -87,21 +59,21 @@ mkdir -p data/phase2_data
 # Copy your HTML files to data/phase2_data/
 ```
 
-### Step 5: Run the Backend Service
+### Step 4: Run the Backend Service
 
 ```bash
-cd backend
+cd part_2_medical-chatbot/backend
 uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The API will be available at http://localhost:8000
 
-### Step 6: Run the Frontend Application
+### Step 5: Run the Frontend Application
 
 In a new terminal, run:
 
 ```bash
-cd frontend
+cd part_2_medical-chatbot/frontend
 streamlit run app.py
 ```
 
@@ -132,10 +104,11 @@ pytest tests/
 
 Logs are stored in the `logs/` directory. The log level can be configured in the `.env` file.
 
-## License
-
-[Your License]
 
 ## Contact
 
-[Your Contact Information]
+Yasmin Adler- 
+
+0587811146
+adleryasmin@gmail.com
+

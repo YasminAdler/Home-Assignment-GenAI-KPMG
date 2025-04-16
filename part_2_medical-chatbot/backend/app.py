@@ -2,39 +2,32 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
-import logging
-from datetime import datetime
-
-# Import configuration and routes
 from config import settings
 from routes import chat, health
 from utils.logging_config import setup_logging
+from contextlib import asynccontextmanager
 
-# Initialize logger
 logger = setup_logging()
 
-# Create FastAPI application
 app = FastAPI(
     title="Medical Services Chatbot API",
     description="A microservice for answering questions about Israeli health funds",
     version="1.0.0"
 )
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual origins
+    allow_origins=["*"],  ## allwing all origins, of course, it's only good for development and not good for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
 app.include_router(health.router, tags=["Health"])
-app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
+app.include_router(chat.router, prefix="/api/chat", tags=["Chat"]) ## the api prefix is only for distinguishing the API routes from frontend routes
 
-# Add global exception handler
-@app.exception_handler(Exception)
+
+@app.exception_handler(Exception) ## catches any unhandled error
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global exception: {exc}")
     return JSONResponse(
@@ -42,15 +35,13 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"message": "An unexpected error occurred. Please try again later."}
     )
 
-# Startup event
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     logger.info("Medical Services Chatbot API starting up")
-
-# Shutdown event
-@app.on_event("shutdown")
-async def shutdown_event():
+    yield
     logger.info("Medical Services Chatbot API shutting down")
+
+app = FastAPI(lifespan=lifespan)
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
