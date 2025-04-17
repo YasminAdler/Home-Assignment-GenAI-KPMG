@@ -8,9 +8,7 @@ from backend.services.knowledge_base import KnowledgeBaseService
 from backend.dependencies import get_knowledge_base_service
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter()
-
 openai_service = AzureOpenAIService()
 
 @router.post("/chat", response_model=ChatResponse)
@@ -19,11 +17,9 @@ async def chat(
     kb_service: KnowledgeBaseService = Depends(get_knowledge_base_service)
 ):
     try:
-        # Detect language from user's message
         message = request.message
         detected_language = "he" if any(hebrew_char in message for hebrew_char in "אבגדהוזחטיכלמנסעפצקרשת") else "en"
         
-        # Use detected language for this specific response
         response_language = detected_language
         logger.info(f"Detected language: {response_language} for message: '{message[:50]}...'")
         
@@ -38,13 +34,11 @@ async def chat(
             logger.info("Processing information collection phase")
             response_content = await openai_service.get_user_information(
                 formatted_messages, 
-                request.language  # Use original language for info collection
+                request.language  
             )
         else:
-            # Q&A Phase
             logger.info(f"Processing Q&A phase for HMO: {request.user_info.hmo}")
             
-            # Log available HMOs for debugging
             if hasattr(kb_service, 'hmo_data'):
                 logger.info(f"Available HMOs: {list(kb_service.hmo_data.keys())}")
             
@@ -107,14 +101,12 @@ async def generate_system_message(request: Request):
             logger.warning("Empty prompt received in generate_message endpoint")
             return {"message": ""}
         
-        # Use the existing openai_service (already defined at the module level)
         # Format messages for the API call
         formatted_messages = [
             {"role": "system", "content": "You are a helpful assistant that generates natural, friendly messages for a healthcare chatbot. Respond in the requested language."},
             {"role": "user", "content": prompt}
         ]
         
-        # Use the same method as the confirmation check
         response_content = await openai_service.get_system_message(
             formatted_messages,
             language

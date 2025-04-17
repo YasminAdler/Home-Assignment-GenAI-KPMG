@@ -50,7 +50,6 @@ async def check_confirmation(request: ConfirmationRequest):
     try:
         logger.info(f"Checking confirmation for message: '{request.message}' in language: {request.language}")
         
-        # Simple rule-based approach
         confirmation_phrases = {
             "en": ["yes", "correct", "confirm", "accurate", "right", "ok", "sure", "looks good"],
             "he": ["כן", "נכון", "מאשר", "מאשרת", "אישור", "הכל נכון", "הכל בסדר", "אוקיי", "אוקי"]
