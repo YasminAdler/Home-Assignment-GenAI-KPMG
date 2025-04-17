@@ -144,3 +144,5 @@ async def confirm_intent(request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred during confirmation check: {str(e)}"
         )
+        
+        

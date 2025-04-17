@@ -12,9 +12,11 @@ import uvicorn
 from contextlib import asynccontextmanager
 
 from backend.config import settings, RAW_COMBINED_HTML_PATH, KNOWLEDGE_BASE_DIR
-from backend.routes import chat, health
+from backend.routers import chat, health
 from backend.utils.logging_config import setup_logging
 from data.HMO_preprocessor import preprocess_hmo_html
+from backend.routers.extraction import router as extraction_router
+from backend.routers.chat import router as chat_router
 
 
 logger = setup_logging()
@@ -98,6 +100,9 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["Health"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
+app.include_router(extraction_router, prefix="/api/chat", tags=["chat"])
+app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
+
 
 
 @app.exception_handler(Exception)

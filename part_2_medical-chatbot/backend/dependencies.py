@@ -39,3 +39,4 @@ def get_knowledge_base_service() -> KnowledgeBaseService:
         logger.warning("KnowledgeBaseService initialized but no HMO data was loaded")
         
     return service
+

@@ -7,12 +7,15 @@ __pycache__/
 **/__pycache__/
 
 # .env files
-.env
+**/.env
 *.env
-
+**/.venv
 # Ignore specific folders
 part_1_RCA/utilss/__pycache__/
 part_2_medical-chatbot/backend/routes/__pycache__/
 part_2_medical-chatbot/data/__pycache__/
-part_2_medical-chatbot/backend/logs/
 part_2_medical-chatbot/logs/
+part_2_medical-chatbot/backend/__pycache__/
+part_2_medical-chatbot/__pycache__/
+
+

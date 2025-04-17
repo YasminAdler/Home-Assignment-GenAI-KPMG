@@ -46,15 +46,15 @@ def show_welcome_message() -> None:
             st.info("אנא ספק את פרטיך האישיים כדי שנוכל לסייע לך טוב יותר.")
 
 
-def render_chat_message(role: str, content: str) -> None: 
-    if role == "user":
-        st.chat_message("user").write(content)
-    else:
-        st.chat_message("assistant").write(content)
+# def render_chat_message(role: str, content: str) -> None: 
+#     if role == "user":
+#         st.chat_message("user").write(content)
+#     else:
+#         st.chat_message("assistant").write(content)
 
 
-def render_error(message: str) -> None:
-    st.error(message)
+# def render_error(message: str) -> None:
+#     st.error(message)
 
 
 def render_info(message: str) -> None:

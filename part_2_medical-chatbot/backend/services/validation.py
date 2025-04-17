@@ -2,7 +2,7 @@ import re
 import logging
 from typing import Dict, Any, Tuple, Optional
 
-from config import settings
+from backend.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class ValidationService:
                 return False, "Age must be a number"
             
             if age_int < 0 or age_int > 120:
-                return False, "Age must be between 0 and 120 (mazal tov)"
+                return False, "Age must be between 0 and 120 (mazal)"
             
             return True, None
             
@@ -94,6 +94,15 @@ class ValidationService:
     
     @staticmethod
     def validate_insurance_tier(tier: str) -> Tuple[bool, Optional[str]]:
+        """
+        Validate insurance tier.
+        
+        Args:
+            tier: Insurance tier
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
         try:
             if not tier or not isinstance(tier, str):
                 return False, "Insurance tier is required"
@@ -110,10 +119,21 @@ class ValidationService:
     
     @staticmethod
     def validate_name(name: str, field_name: str = "name") -> Tuple[bool, Optional[str]]:
+        """
+        Validate name.
+        
+        Args:
+            name: Name to validate
+            field_name: Field name for error message
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
         try:
             if not name or not isinstance(name, str):
                 return False, f"{field_name} is required"
             
+            # Remove whitespace
             name = name.strip()
             
             if len(name) < 1:
