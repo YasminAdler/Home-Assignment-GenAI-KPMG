@@ -56,7 +56,7 @@ class AzureOpenAIService:
             logger.error(f"Error in get_user_information: {str(e)}")
             raise
     
-    async def get_qa_response(self, messages: List[Dict[str, str]], user_info: Dict[str, Any],knowledge_base: str,language: str) -> str:
+    async def get_qa_response(self, messages: List[Dict[str, str]], user_info: Dict[str, Any], knowledge_base: str, language: str) -> str:
         try:
             system_message = self._get_qa_system_prompt(user_info, knowledge_base, language)
             all_messages = [{"role": "system", "content": system_message}] + messages
@@ -74,7 +74,7 @@ class AzureOpenAIService:
             content = response.choices[0].message.content
             logger.info("Successfully obtained Q&A response")
             return content
-            
+                
         except Exception as e:
             logger.error(f"Error in get_qa_response: {str(e)}")
             raise
@@ -138,7 +138,7 @@ class AzureOpenAIService:
             1. השתמש רק במידע שסופק בבסיס הידע.
             2. התאם את התשובות לקופת החולים ודרגת הביטוח של המשתמש.
             3. אם אינך יודע את התשובה או שהמידע אינו זמין בבסיס הידע, ציין זאת בבירור.
-            4. ענה בעברית אם המשתמש שואל בעברית, או באנגלית אם המשתמש שואל באנגלית.
+            4. אתה חייב לענות בעברית כאשר המשתמש שואל בעברית. אל תתרגם את המידע בעברית לאנגלית כאשר המשתמש שואל בעברית.
             """
         else:  # English
             return f"""
@@ -157,9 +157,10 @@ class AzureOpenAIService:
             1. Only use information provided in the knowledge base.
             2. Tailor the answers to the user's HMO and insurance tier.
             3. If you don't know the answer or the information is not available in the knowledge base, clearly state that.
-            4. Answer in Hebrew if the user asks in Hebrew, or in English if the user asks in English.
+            4. When the user asks in English, you must translate any Hebrew content from the knowledge base to English in your responses.
+            5. Make sure that you're detecting the language of the user's query correctly - if they ask in Hebrew, respond in Hebrew.
             """
-    
+            
     
     
     async def get_confirmation_check(self, messages: List[Dict[str, str]], language: str) -> str:

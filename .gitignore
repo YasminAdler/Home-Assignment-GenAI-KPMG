@@ -1,6 +1,7 @@
 # Logs
-**/logs/
-logs/
+**\logs
+\**.log
+
 
 # Python cache
 __pycache__/
@@ -14,8 +15,7 @@ __pycache__/
 part_1_RCA/utilss/__pycache__/
 part_2_medical-chatbot/backend/routes/__pycache__/
 part_2_medical-chatbot/data/__pycache__/
-part_2_medical-chatbot/logs/
-part_2_medical-chatbot/backend/__pycache__/
-part_2_medical-chatbot/__pycache__/
-
+part_2_medical-chatbot\backend\__pycache__/
+part_2_medical-chatbot\__pycache__\
+part_2_medical-chatbot\backend\__pycache__
 

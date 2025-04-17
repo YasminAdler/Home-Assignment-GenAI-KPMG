@@ -19,6 +19,14 @@ async def chat(
     kb_service: KnowledgeBaseService = Depends(get_knowledge_base_service)
 ):
     try:
+        # Detect language from user's message
+        message = request.message
+        detected_language = "he" if any(hebrew_char in message for hebrew_char in "אבגדהוזחטיכלמנסעפצקרשת") else "en"
+        
+        # Use detected language for this specific response
+        response_language = detected_language
+        logger.info(f"Detected language: {response_language} for message: '{message[:50]}...'")
+        
         formatted_messages = [
             {"role": msg.role, "content": msg.content}
             for msg in request.chat_history.messages
@@ -30,7 +38,7 @@ async def chat(
             logger.info("Processing information collection phase")
             response_content = await openai_service.get_user_information(
                 formatted_messages, 
-                request.language
+                request.language  # Use original language for info collection
             )
         else:
             # Q&A Phase
@@ -58,7 +66,7 @@ async def chat(
                 formatted_messages,
                 request.user_info.dict(),
                 knowledge_base,
-                request.language
+                response_language  # Use detected language for response
             )
         
         updated_history = ChatHistory(
@@ -84,7 +92,41 @@ async def chat(
             detail=f"An error occurred while processing your request: {str(e)}"
         )
         
-
+@router.post("/generate_message", response_model=Dict[str, str])
+async def generate_system_message(request: Request):
+    """
+    Generate a system message in the specified language.
+    Used for creating dynamic UI messages without hardcoding.
+    """
+    try:
+        data = await request.json()
+        prompt = data.get("prompt", "")
+        language = data.get("language", "en")
+        
+        if not prompt:
+            logger.warning("Empty prompt received in generate_message endpoint")
+            return {"message": ""}
+        
+        # Use the existing openai_service (already defined at the module level)
+        # Format messages for the API call
+        formatted_messages = [
+            {"role": "system", "content": "You are a helpful assistant that generates natural, friendly messages for a healthcare chatbot. Respond in the requested language."},
+            {"role": "user", "content": prompt}
+        ]
+        
+        # Use the same method as the confirmation check
+        response_content = await openai_service.get_system_message(
+            formatted_messages,
+            language
+        )
+        
+        logger.info(f"Generated system message for language '{language}'")
+        return {"message": response_content.strip()}
+        
+    except Exception as e:
+        logger.error(f"Error in generate_system_message: {str(e)}")
+        return {"message": ""}
+    
 @router.post("/confirm_intent", response_model=Dict[str, bool])
 async def confirm_intent(request: Request):
     try:

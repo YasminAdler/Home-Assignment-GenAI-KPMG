@@ -93,34 +93,6 @@ def extract_user_info_api(text: str) -> Dict[str, Any]:
         return {"error": str(e)}
 
 
-def check_confirmation_api(message: str) -> bool:
-    """Check if a message is a confirmation using the API."""
-    try:
-        payload = {
-            "message": message,
-            "language": st.session_state.language
-        }
-        
-        print(f"🔍 Checking confirmation for: '{message}' in language: {st.session_state.language}")
-        
-        response = requests.post(
-            f"{API_URL}/api/chat/confirm_intent",
-            json=payload,
-            headers={"Content-Type": "application/json"}
-        )
-        
-        if response.status_code != 200:
-            print(f"❌ CONFIRMATION API ERROR: {response.status_code} - {response.text}")
-            return False
-        
-        result = response.json()
-        is_confirmation = result.get("is_confirmation", False)
-        print(f"✅ Confirmation API Response: is_confirmation={is_confirmation}")
-        return is_confirmation
-    except Exception as e:
-        print(f"❌ CONFIRMATION API Exception: {str(e)}")
-        return False
-
 
 def process_information_directly(user_message: str) -> bool:
     """
@@ -169,11 +141,8 @@ def check_and_process_from_assistant_response(message: str) -> bool:
     Check if the assistant response contains complete user information and process it.
     Returns True if successful, False otherwise.
     """
-    # First check if this looks like it might contain user information
     info_indicators = [
-        # English indicators
         "name", "id", "gender", "age", "hmo", "card", "tier", "information",
-        # Hebrew indicators
         "שם", "תעודת", "מגדר", "גיל", "קופת", "כרטיס", "ביטוח"
     ]
     
@@ -184,7 +153,6 @@ def check_and_process_from_assistant_response(message: str) -> bool:
     if indicator_count < 4:
         return False
     
-    # Try to extract user information
     try:
         print(f"🔍 Attempting to extract user info from assistant response...")
         result = extract_user_info_api(message)
@@ -193,7 +161,6 @@ def check_and_process_from_assistant_response(message: str) -> bool:
             print(f"❌ Extraction from assistant response failed: {result.get('error', 'Incomplete information')}")
             return False
             
-        # Success! Set the session state directly
         st.session_state.user_info = result["user_info"]
         st.session_state.information_phase_complete = True
         
@@ -212,10 +179,73 @@ def render_header():
     with col2:
         st.title("Medical Services Chatbot")
 
-    # Bilingual welcome message
     st.markdown("### ברוכים הבאים למערכת המידע של קופות החולים בישראל")
     st.markdown("### Welcome to the Israeli Health Funds Information System")
-
+    
+    
+def get_localized_system_message(message_type: str, language: str) -> str:
+    """
+    Use the AI model to generate appropriate system messages in the user's language.
+    This removes the need for hardcoded translations.
+    """
+    try:
+        message_intents = {
+            "welcome": "Thank the user for providing their information and tell them they can now ask questions about health services.",
+            "info_complete": "Inform the user that their information is complete and they can ask questions about health services.",
+            "processing": "Tell the user you're processing their information.",
+            "thinking": "Tell the user you're thinking about their question."
+        }
+        
+        intent = message_intents.get(message_type, "Respond appropriately to the user.")
+        
+        # Create a simple prompt for the AI model
+        system_prompt = f"""
+        Generate a short, friendly message in {'Hebrew' if language == 'he' else 'English'} for the following intent:
+        {intent}
+        
+        Respond with ONLY the message text, no additional explanations.
+        """
+        
+        response = requests.post(
+            f"{API_URL}/api/chat/generate_message",
+            json={
+                "prompt": system_prompt,
+                "language": language
+            },
+            headers={"Content-Type": "application/json"}
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            message = result.get("message", "")
+            if message:
+                return message
+                
+        # Fallback messages if API fails
+        fallbacks = {
+            "welcome": {
+                "en": "Thank you! Your information has been processed successfully.",
+                "he": "תודה! המידע שלך עובד בהצלחה."
+            },
+            "info_complete": {
+                "en": "Your information is complete!",
+                "he": "המידע שלך מלא!"
+            },
+            "processing": {
+                "en": "Processing...",
+                "he": "מעבד..."
+            },
+            "thinking": {
+                "en": "Thinking...",
+                "he": "חושב..."
+            }
+        }
+        return fallbacks.get(message_type, {}).get(language, "")
+    
+    except Exception as e:
+        print(f"❌ Error generating localized message: {str(e)}")
+        return ""
+    
 
 def main():
     render_header()
@@ -225,41 +255,39 @@ def main():
     for msg in st.session_state.chat_history:
         st.chat_message(msg["role"]).write(msg["content"])
 
-    # First, check if we have an assistant message with complete information
-    # This helps auto-transition after the assistant has summarized the information
     if not st.session_state.information_phase_complete and len(st.session_state.chat_history) > 0:
-        # Look for the last assistant message
         for msg in reversed(st.session_state.chat_history):
             if msg["role"] == "assistant":
-                # Check if it contains complete information
                 if check_and_process_from_assistant_response(msg["content"]):
                     print("✅ AUTO-TRANSITIONING: Found complete information in assistant message")
-                    st.success("Your information is complete! You can now ask questions about health services.")
-                    # We don't return here - allow the user to continue with their next message
+                    success_msg = get_localized_system_message("info_complete", st.session_state.language)
+                    st.success(success_msg)
                 break
 
     # Get user input
     if prompt := st.chat_input("Type your message here..."):
+        # Auto-detect language from user input if it contains Hebrew characters
+        if any(hebrew_char in prompt for hebrew_char in "אבגדהוזחטיכלמנסעפצקרשת"):
+            st.session_state.language = "he"
+            print(f"🔍 Detected Hebrew language from user input")
+        
         st.chat_message("user").write(prompt)
         st.session_state.chat_history.append({"role": "user", "content": prompt})
 
-        # Check if this might be a direct information submission (regardless of line count)
         if not st.session_state.information_phase_complete:
-            # Try to process information directly
             if process_information_directly(prompt):
                 # If successful, handle it as if we're in the Q&A phase
-                with st.spinner("Processing your information..."):
-                    welcome_msg = "Thank you! Your information has been processed successfully. You can now ask questions about your health services."
+                with st.spinner(get_localized_system_message("processing", st.session_state.language)):
+                    welcome_msg = get_localized_system_message("welcome", st.session_state.language)
                     st.success(welcome_msg)
                     st.chat_message("assistant").write(welcome_msg)
                     st.session_state.chat_history.append({"role": "assistant", "content": welcome_msg})
                 return
 
-        # Continue with the regular flow...
         if st.session_state.information_phase_complete and st.session_state.user_info:
             print(f"✅ USING EXISTING USER INFO: {st.session_state.user_info}")
             # Q&A phase
-            with st.spinner("Just a sec! I'm thinking..."):
+            with st.spinner(get_localized_system_message("thinking", st.session_state.language)):
                 response = call_chat_api(prompt)
                 if "error" in response:
                     st.error(response["error"])
@@ -268,9 +296,7 @@ def main():
                 st.session_state.chat_history.append({"role": "assistant", "content": response["response"]})
             return
 
-        # Add a simpler confirmation check that works with the existing API
         if len(st.session_state.chat_history) >= 3 and prompt.lower() in ["yes", "correct", "right", "כן", "נכון"]:
-            # This is likely a confirmation - get the previous assistant message
             last_assistant_msg = None
             for msg in reversed(st.session_state.chat_history[:-1]):  # Exclude the current user message
                 if msg["role"] == "assistant":
@@ -282,16 +308,13 @@ def main():
                 result = extract_user_info_api(last_assistant_msg)
                 
                 if "error" not in result and result.get("is_complete", False):
-                    # Success! Set the session state
                     st.session_state.user_info = result["user_info"]
                     st.session_state.information_phase_complete = True
                     print(f"✅ USER INFO EXTRACTED: {result['user_info']}")
                     
-                    # Add a success message
-                    success_msg = "Information collection complete! You can now ask questions about medical services."
+                    success_msg = get_localized_system_message("info_complete", st.session_state.language)
                     st.success(success_msg)
                     
-                    # Make the API call with the new user_info
                     response = call_chat_api(prompt)
                     if "error" in response:
                         st.error(response["error"])
@@ -301,8 +324,7 @@ def main():
                     st.session_state.chat_history.append({"role": "assistant", "content": response["response"]})
                     return
 
-        # Normal flow - information collection phase
-        with st.spinner("Just a sec! I'm thinking..."):
+        with st.spinner(get_localized_system_message("thinking", st.session_state.language)):
             response = call_chat_api(prompt)
             if "error" in response:
                 st.error(response["error"])
@@ -312,11 +334,10 @@ def main():
             st.chat_message("assistant").write(assistant_response)
             st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
             
-            # Auto-transition: Check if the assistant response has complete information
             if not st.session_state.information_phase_complete:
                 if check_and_process_from_assistant_response(assistant_response):
-                    # Show a success message since we'll auto-transition to Q&A phase
-                    st.success("Your information is complete! You can now ask questions about health services.")
+                    success_msg = get_localized_system_message("info_complete", st.session_state.language)
+                    st.success(success_msg)
 
 
 if __name__ == "__main__":
