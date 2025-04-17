@@ -187,7 +187,7 @@ def get_localized_system_message(message_type: str, language: str) -> str:
             "welcome": "Thank the user for providing their information and tell them they can now ask questions about health services.",
             "info_complete": "Inform the user that their information is complete and they can ask questions about health services.",
             "processing": "Tell the user you're processing their information.",
-            "thinking": "Tell the user you're thinking about their question."
+            "thinking": "Respond with ONLY the word 'Thinking...'."
         }
         
         intent = message_intents.get(message_type, "Respond appropriately to the user.")

@@ -18,11 +18,9 @@ def setup_logging():
     
     logger.handlers = []
     
-    # Create a console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(getattr(logging, settings.LOG_LEVEL))
     
-    # Create a file handler
     file_handler = RotatingFileHandler(
         log_file, 
         maxBytes=10485760,  # 10MB

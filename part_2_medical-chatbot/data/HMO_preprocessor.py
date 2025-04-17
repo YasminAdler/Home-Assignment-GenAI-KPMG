@@ -43,11 +43,9 @@ def preprocess_hmo_html(input_dir: str, output_dir: str):
 
             soup = BeautifulSoup(html_content, "html.parser")
 
-            # Extract title from filename to use as section name
             section_title = filename.replace(".html", "").replace("_", " ")
             logger.info(f"Extracted section title: {section_title}")
 
-            # Find all tables in the document
             tables = soup.find_all('table')
             logger.info(f"Found {len(tables)} tables in {filename}")
 
@@ -56,7 +54,6 @@ def preprocess_hmo_html(input_dir: str, output_dir: str):
                 if not header:
                     continue
                 
-                # Extract column headers
                 columns = [th.get_text(strip=True) for th in header.find_all('th')]
                 logger.info(f"Table {table_idx+1} columns: {columns}")
                 
@@ -64,7 +61,6 @@ def preprocess_hmo_html(input_dir: str, output_dir: str):
                     logger.warning(f"Table {table_idx+1} has fewer than 4 columns, skipping")
                     continue
                 
-                # Process each row in the table
                 rows = table.find_all('tr')[1:]  # Skip header row
                 logger.info(f"Processing {len(rows)} rows from table {table_idx+1}")
                 
@@ -73,7 +69,6 @@ def preprocess_hmo_html(input_dir: str, output_dir: str):
                     if len(cells) < 4:
                         continue
                     
-                    # Extract service name from first column
                     service_name = cells[0].get_text(strip=True)
                     
                     # Extract relevant HMO data
@@ -81,10 +76,8 @@ def preprocess_hmo_html(input_dir: str, output_dir: str):
                         if i + 1 >= len(cells):
                             continue
                             
-                        # Get the complete HTML content of the cell
                         benefit_html = cells[i + 1].decode_contents()
                         
-                        # Add more structure to make specific data easier to find
                         formatted_section = f"""
                         <div class="service-section" id="{section_title.lower().replace(' ', '-')}-{service_name.lower().replace(' ', '-')}">
                             <h3>{section_title} - {service_name}</h3>
@@ -105,7 +98,6 @@ def preprocess_hmo_html(input_dir: str, output_dir: str):
         except Exception as e:
             logger.error(f"Error processing {filename}: {str(e)}")
 
-    # Write the aggregated content to files
     for hmo, sections in hmo_data.items():
         file_path = os.path.join(output_dir, f"{HMO_NAME_MAPPING[hmo]}.html")
         
