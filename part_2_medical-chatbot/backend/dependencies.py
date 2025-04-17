@@ -25,14 +25,11 @@ def get_knowledge_base_service() -> KnowledgeBaseService:
         os.makedirs(KNOWLEDGE_BASE_DIR, exist_ok=True)
         logger.info(f"Created knowledge base directory: {KNOWLEDGE_BASE_DIR}")
         
-    # Check for HTML files
     html_files = [f for f in os.listdir(KNOWLEDGE_BASE_DIR) if f.endswith('.html')]
     logger.info(f"Found {len(html_files)} HTML files in knowledge base directory")
     
-    # Create service
     service = KnowledgeBaseService()
     
-    # Validate service has data
     if hasattr(service, 'hmo_data') and service.hmo_data:
         logger.info(f"KnowledgeBaseService loaded with {len(service.hmo_data)} HMOs")
     else:

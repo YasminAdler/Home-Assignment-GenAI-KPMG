@@ -9,14 +9,13 @@ def sanitize_input(text: str) -> str:
     if not text:
         return ""
     
-    text = re.sub(r'<[^>]*>', '', text) # removing html or javaScript tags (by malicious users)
+    text = re.sub(r'<[^>]*>', '', text) 
     text = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', '', text)
     text = text.strip()
     
     return text
 
 def detect_language(text: str) -> str:
-    # Check if the text contains Hebrew characters
     hebrew_pattern = re.compile(r'[\u0590-\u05FF]') ## acording to my ASCII table
     if hebrew_pattern.search(text):
         return 'he'

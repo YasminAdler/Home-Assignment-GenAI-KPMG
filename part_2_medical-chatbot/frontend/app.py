@@ -99,32 +99,26 @@ def process_information_directly(user_message: str) -> bool:
     A direct approach to process user information without relying on complex detection.
     Returns True if successful, False otherwise.
     """
-    # Check if the message contains all the required information fields
     required_fields = ["name", "id", "gender", "age", "hmo", "card", "tier"]
     
-    # For Hebrew
     if any(hebrew_char in user_message for hebrew_char in "אבגדהוזחטיכלמנסעפצקרשת"):
         required_fields = ["שם", "תעודת", "מגדר", "גיל", "קופת", "כרטיס", "ביטוח"]
     
-    # Simple check if message contains all required fields
     has_all_fields = all(field.lower() in user_message.lower() for field in required_fields)
     
     if not has_all_fields:
         print(f"❌ Message does not contain all required fields")
         return False
     
-    # Extract user information directly
     try:
         print(f"🔍 Attempting direct information extraction...")
         
-        # Use our extraction API
         result = extract_user_info_api(user_message)
         
         if "error" in result or not result.get("is_complete", False):
             print(f"❌ Direct extraction failed: {result.get('error', 'Incomplete information')}")
             return False
             
-        # Success! Set the session state directly
         st.session_state.user_info = result["user_info"]
         st.session_state.information_phase_complete = True
         
@@ -221,7 +215,6 @@ def get_localized_system_message(message_type: str, language: str) -> str:
             if message:
                 return message
                 
-        # Fallback messages if API fails
         fallbacks = {
             "welcome": {
                 "en": "Thank you! Your information has been processed successfully.",

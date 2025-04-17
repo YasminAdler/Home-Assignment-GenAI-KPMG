@@ -166,16 +166,15 @@ class AzureOpenAIService:
     async def get_confirmation_check(self, messages: List[Dict[str, str]], language: str) -> str:
         try:
             response = self.client.chat.completions.create(
-                model=self.info_deployment,  # Reuse the info collection model
+                model=self.info_deployment, 
                 messages=messages,
-                temperature=0.1,  # Low temperature for more deterministic response
-                max_tokens=5,     # We only need a short response
+                temperature=0.1,  
+                max_tokens=5,     
                 top_p=0.95,
                 frequency_penalty=0,
                 presence_penalty=0
             )
             
-            # Extract the content from the response
             content = response.choices[0].message.content
             logger.info("Successfully obtained confirmation check response")
             return content
@@ -192,7 +191,6 @@ class AzureOpenAIService:
         logger.info("Starting LLM-based information extraction")
         
         try:
-            # System prompt designed to handle both Hebrew and English inputs
             system_message = """
             Extract the following user information from the text. The text may be in Hebrew, English, or a mix of both:
             
@@ -213,7 +211,6 @@ class AzureOpenAIService:
             Return ONLY a valid JSON object with these fields. If a field cannot be extracted, exclude it.
             """
             
-            # Example of how the user information might look in the input
             example_message = """
             Here's a summary of your information:
             1. Name: ישראל ישראלי / Israel Israeli
@@ -240,7 +237,6 @@ class AzureOpenAIService:
             
             logger.debug(f"Sending the following text to LLM for extraction: {summary_text[:100]}...")
             
-            # Create the messages for the API call
             messages = [
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": example_message},
@@ -248,12 +244,11 @@ class AzureOpenAIService:
                 {"role": "user", "content": summary_text}
             ]
             
-            # Make API call with JSON response format
             response = self.client.chat.completions.create(
                 model=self.info_deployment,
                 messages=messages,
                 response_format={"type": "json_object"},
-                temperature=0.1  # Low temperature for more deterministic extraction
+                temperature=0.1  
             )
             
             extracted_json = response.choices[0].message.content
@@ -286,7 +281,6 @@ class AzureOpenAIService:
                 }
                 user_info["insurance_tier"] = tier_mapping.get(user_info["insurance_tier"].lower(), user_info["insurance_tier"])
             
-            # Log results
             fields_extracted = list(user_info.keys())
             logger.info(f"Successfully extracted fields: {fields_extracted}")
             
@@ -300,10 +294,8 @@ class AzureOpenAIService:
         """Check if all required user information fields are present and valid."""
         required_fields = ["first_name", "last_name", "id_number", "gender", "age", "hmo", "hmo_card_number", "insurance_tier"]
         
-        # Check if all required fields exist
         has_all_fields = all(field in user_info for field in required_fields)
         
-        # Additional validation for specific fields
         if has_all_fields:
             # ID number should be 9 digits
             if not user_info["id_number"].isdigit() or len(user_info["id_number"]) != 9:
@@ -362,10 +354,10 @@ class AzureOpenAIService:
         """
         try:
             response = self.client.chat.completions.create(
-                model=self.info_deployment,  # Use the info collection model
+                model=self.info_deployment, 
                 messages=messages,
-                temperature=0.7,  # More creative for natural language
-                max_tokens=100,   # Keep responses brief
+                temperature=0.7,  
+                max_tokens=100,   
                 top_p=0.95,
                 frequency_penalty=0,
                 presence_penalty=0

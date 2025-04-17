@@ -27,7 +27,7 @@ class KnowledgeBaseService:
             for file_path in html_files:
                 try:
                     file_name = os.path.basename(file_path)
-                    hmo_name = file_name.split('.')[0]  # Assumes filename format is "hmo_name.html"
+                    hmo_name = file_name.split('.')[0]  
                     
                     with open(file_path, 'r', encoding='utf-8') as f:
                         html_content = f.read()
@@ -79,7 +79,6 @@ class KnowledgeBaseService:
             return None
     
     def _normalize_hmo_name(self, hmo_name: str) -> str:
-        # This is a simple implementation - you may need to enhance it based on your file naming convention
         hmo_mapping = {
             'מכבי': 'maccabi',
             'מאוחדת': 'meuhedet',
