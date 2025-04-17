@@ -5,7 +5,7 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 import json
 
-from config import settings
+from backend.config import settings
 
 def setup_logging():    
     os.makedirs(settings.LOG_DIR, exist_ok=True)

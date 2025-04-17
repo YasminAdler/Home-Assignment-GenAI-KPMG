@@ -2,19 +2,22 @@ from fastapi import APIRouter, HTTPException, Depends, Request, status
 import logging
 from typing import Dict
 
-from models import ChatRequest, ChatResponse, Message, ChatHistory
-from services.azure_openai import AzureOpenAIService
-from services.knowledge_base import KnowledgeBaseService
+from backend.models import ChatRequest, ChatResponse, Message, ChatHistory
+from backend.services.azure_openai import AzureOpenAIService
+from backend.services.knowledge_base import KnowledgeBaseService
+from backend.dependencies import get_knowledge_base_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 openai_service = AzureOpenAIService()
-knowledge_base_service = KnowledgeBaseService()
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def chat(
+    request: ChatRequest,
+    kb_service: KnowledgeBaseService = Depends(get_knowledge_base_service)
+):
     try:
         formatted_messages = [
             {"role": msg.role, "content": msg.content}
@@ -33,8 +36,18 @@ async def chat(request: ChatRequest):
             # Q&A Phase
             logger.info(f"Processing Q&A phase for HMO: {request.user_info.hmo}")
             
-            knowledge_base = knowledge_base_service.get_knowledge_for_hmo(request.user_info.hmo)
+            # Log available HMOs for debugging
+            if hasattr(kb_service, 'hmo_data'):
+                logger.info(f"Available HMOs: {list(kb_service.hmo_data.keys())}")
             
+            knowledge_base = kb_service.get_knowledge_for_hmo(request.user_info.hmo, format_type="text")
+            logger.info(f"[DEBUG] Knowledge base found: {knowledge_base is not None}")
+            
+            if knowledge_base:
+                logger.info(f"[DEBUG] Knowledge base snippet: {knowledge_base[:300]}")
+            
+            logger.info(f"[DEBUG] Received user_info: {request.user_info}")
+
             if not knowledge_base:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,

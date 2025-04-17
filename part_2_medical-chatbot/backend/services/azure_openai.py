@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, Any, Optional
 import openai
 from openai import AzureOpenAI
-from config import settings
+from backend.config import settings
 
 logger = logging.getLogger(__name__)
 

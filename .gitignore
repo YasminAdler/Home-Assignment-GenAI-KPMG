@@ -1,0 +1,18 @@
+# Logs
+**/logs/
+logs/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+
+# .env files
+.env
+*.env
+
+# Ignore specific folders
+part_1_RCA/utilss/__pycache__/
+part_2_medical-chatbot/backend/routes/__pycache__/
+part_2_medical-chatbot/data/__pycache__/
+part_2_medical-chatbot/backend/logs/
+part_2_medical-chatbot/logs/

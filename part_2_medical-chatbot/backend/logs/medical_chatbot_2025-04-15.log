@@ -1,1 +1,0 @@
-{"timestamp": "2025-04-15T20:12:01.928482", "level": "INFO", "message": "Medical Services Chatbot API starting up", "module": "app", "function": "startup_event", "line": 48}

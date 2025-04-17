@@ -44,8 +44,8 @@ cd medical-chatbot
 ### Step 2: Set Up Virtual Environment
 
 ```bash
-python -m venv venv
-venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r part_2_medical-chatbot/logs/requirements.txt
 ```
 
@@ -62,8 +62,8 @@ mkdir -p data/phase2_data
 ### Step 4: Run the Backend Service
 
 ```bash
-cd part_2_medical-chatbot/backend
-uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+cd part_2_medical-chatbot
+uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The API will be available at http://localhost:8000
